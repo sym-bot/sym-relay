@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Pre-commit secret scan for sym-relay.
+#
+# Blocks commits that contain token-shaped strings as fallback values.
+# Catches the class of bug that put 'xmesh-demo-2026' in the initial
+# commit and required a history rewrite before going public.
+#
+# Install once per clone with:
+#   git config core.hooksPath .githooks
+
+set -euo pipefail
+
+# Pattern: any process.env.X || 'literal' or = 'looks-like-a-token'
+# False positives possible — escape with `git commit --no-verify` if needed.
+PATTERNS=(
+  "process\.env\.[A-Z_]+ *\|\| *['\"][A-Za-z0-9_-]{8,}['\"]"
+  "(token|secret|password|api[_-]?key) *= *['\"][A-Za-z0-9_/+=-]{12,}['\"]"
+)
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACM | grep -Ev '\.(md|txt|json|lock|yaml|yml)$|^test/|^tests/|^node_modules/' || true)
+
+if [ -z "$STAGED" ]; then
+  exit 0
+fi
+
+HITS=0
+for f in $STAGED; do
+  [ -f "$f" ] || continue
+  for p in "${PATTERNS[@]}"; do
+    if matches=$(git diff --cached -- "$f" | grep -E "^\+" | grep -vE "^\+\+\+" | grep -E "$p" || true); [ -n "$matches" ]; then
+      echo "✗ $f: possible hardcoded secret"
+      echo "$matches" | sed 's/^/    /'
+      HITS=$((HITS + 1))
+    fi
+  done
+done
+
+if [ "$HITS" -gt 0 ]; then
+  echo
+  echo "Refusing to commit. Move secrets to env vars."
+  echo "If this is a false positive, run: git commit --no-verify"
+  exit 1
+fi
