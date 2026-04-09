@@ -1,5 +1,10 @@
 # sym-relay
 
+[![MMP Spec](https://img.shields.io/badge/protocol-MMP_v0.2.2-purple)](https://sym.bot/spec/mmp)
+[![arXiv](https://img.shields.io/badge/arXiv-2604.03955-b31b1b.svg)](https://arxiv.org/abs/2604.03955)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%3E%3D18-green)](https://nodejs.org)
+
 > WebSocket relay for the [SYM mesh](https://sym.bot). Cross-network transport for cognitive coupling between MMP peer nodes.
 
 `sym-relay` is the optional internet-scale transport for the Mesh Memory Protocol. Two SYM peers on the same LAN discover each other directly via Bonjour mDNS and don't need a relay at all. The relay only matters when peers are on different networks (different offices, home ↔ coffee shop, mobile ↔ desktop, etc).
